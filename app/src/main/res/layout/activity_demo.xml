@@ -1,11 +1,32 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingBottom="@dimen/activity_vertical_margin" tools:context=".DemoActivity">
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+    <Button
+        android:id="@+id/activity_demo_start_anim_btn1"
+        android:text="start_animation_1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onClick"/>
+    <Button
+        android:id="@+id/activity_demo_start_anim_btn2"
+        android:text="start_animation_2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onClick"/>
+    <Button
+        android:id="@+id/activity_demo_cancle_anim_btn"
+        android:text="cancle_animation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:onClick="onClick"/>
 
-    <TextView android:text="@string/hello_world" android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+    <com.bruce.open.animationsurfaceview.lib.AnimationSurfaceView
+        android:id="@+id/animation_surfaceView"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        />
+</LinearLayout>
 
-</RelativeLayout>
