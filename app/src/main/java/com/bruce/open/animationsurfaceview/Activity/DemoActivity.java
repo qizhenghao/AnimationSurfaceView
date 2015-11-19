@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.animation.TranslateAnimation;
 
 import com.bruce.open.animationsurfaceview.R;
 import com.bruce.open.animationsurfaceview.lib.AnimationSurfaceView;
@@ -14,7 +13,7 @@ import com.bruce.open.animationsurfaceview.lib.IAnimationStrategy;
 import com.bruce.open.animationsurfaceview.strategies.ParabolaAnimationStrategy;
 import com.bruce.open.animationsurfaceview.strategies.ScanAnimaitonStrategy;
 
-public class DemoActivity extends AppCompatActivity implements AnimationSurfaceView.OnAnimationStausChangedListener{
+public class DemoActivity extends AppCompatActivity implements AnimationSurfaceView.OnStausChangedListener {
 
     private IAnimationStrategy iAnimationStrategy;
     private AnimationSurfaceView animationSurfaceView;
