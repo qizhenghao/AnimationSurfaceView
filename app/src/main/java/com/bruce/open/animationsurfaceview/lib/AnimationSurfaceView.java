@@ -12,26 +12,19 @@ import android.view.SurfaceView;
  * @time 2015年11月09日15:24:15
  */
 public class AnimationSurfaceView extends SurfaceView implements SurfaceHolder.Callback, Runnable {
-    /**
-     * 每30ms刷一帧。
-     */
-    private static final long SLEEP_DURATION = 10l;
-    private SurfaceHolder holder;
-    /**
-     * 动画图标。
-     */
-    private Bitmap bitmap;
-    private IAnimationStrategy iAnimationStrategy;
-    private OnAnimationStausChangedListener listener;
+
+    private static final String TAG = "AnimationSurfaceView";
+    private static final long REFRESH_INTERVAL_TIME = 30l;//每间隔30ms刷一帧
+    private SurfaceHolder mSurfaceHolder;
+    private Bitmap mBitmap;                               //动画图标
+    private IAnimationStrategy mIAnimationStrategy;       //动画执行算法策略
+    private OnStausChangedListener mStausChangedListener; //动画状态改变监听事件
 
     private int marginLeft;
     private int marginTop;
 
-    /**
-     * 默认未创建，相当于Destory。
-     */
-    private boolean surfaceDestoryed = true;
-    private Thread thread;
+    private boolean isSurfaceDestoryed = true;            //默认未创建，相当于Destory
+    private Thread mThread;                               //动画刷新线程
 
     public AnimationSurfaceView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
@@ -48,17 +41,18 @@ public class AnimationSurfaceView extends SurfaceView implements SurfaceHolder.C
         init();
     }
 
+    //初始化
     private void init() {
-        holder = getHolder();
-        holder.addCallback(this);
-        holder.setFormat(PixelFormat.TRANSPARENT);
-        setZOrderOnTop(true);
-        thread = new Thread(this);
+        mSurfaceHolder = getHolder();
+        mSurfaceHolder.addCallback(this);
+        setZOrderOnTop(true);//设置画布背景透明
+        mSurfaceHolder.setFormat(PixelFormat.TRANSPARENT);
+        mThread = new Thread(this);
     }
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
-        surfaceDestoryed = false;
+        isSurfaceDestoryed = false;
     }
 
     @Override
@@ -68,52 +62,55 @@ public class AnimationSurfaceView extends SurfaceView implements SurfaceHolder.C
 
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
-        surfaceDestoryed = true;
-        iAnimationStrategy.cancel();
+        isSurfaceDestoryed = true;
+        mIAnimationStrategy.cancel();
     }
 
-    private void handleThread() {
+    //执行
+    private void executeAnimationStrategy() {
         Canvas canvas = null;
 
-        Paint pTmp = new Paint();
-        pTmp.setAntiAlias(true);
-        pTmp.setColor(Color.TRANSPARENT);
+        Paint tempPaint = new Paint();
+        tempPaint.setAntiAlias(true);
+        tempPaint.setColor(Color.TRANSPARENT);
 
         Paint paint = new Paint();
-        // 设置抗锯齿
         paint.setAntiAlias(true);
         paint.setColor(Color.CYAN);
-        if (listener != null) {
-            listener.onAnimationStart(this);
+        if (mStausChangedListener != null) {
+            mStausChangedListener.onAnimationStart(this);
         }
-        iAnimationStrategy.start();
-        while (iAnimationStrategy.doing()) {
+        mIAnimationStrategy.start();
+        while (mIAnimationStrategy.doing()) {
             try {
-                iAnimationStrategy.compute();
-                canvas = holder.lockCanvas();
-                // 设置画布的背景为透明。
-                canvas.drawColor(Color.TRANSPARENT, android.graphics.PorterDuff.Mode.CLEAR);
+                mIAnimationStrategy.compute();
+
+                canvas = mSurfaceHolder.lockCanvas();
+                canvas.drawColor(Color.TRANSPARENT, android.graphics.PorterDuff.Mode.CLEAR);// 设置画布的背景为透明
+
                 // 绘上新图区域
-                float x = (float) iAnimationStrategy.getX() + marginLeft;
-                float y = (float) iAnimationStrategy.getY() + marginTop;
-                canvas.drawRect(x, y, x + bitmap.getWidth(), y + bitmap.getHeight(), pTmp);
-                canvas.drawBitmap(bitmap, x, y, paint);
-                holder.unlockCanvasAndPost(canvas);
-                Thread.sleep(SLEEP_DURATION);
+                float x = (float) mIAnimationStrategy.getX() + marginLeft;
+                float y = (float) mIAnimationStrategy.getY() + marginTop;
+
+                canvas.drawRect(x, y, x + mBitmap.getWidth(), y + mBitmap.getHeight(), tempPaint);
+                canvas.drawBitmap(mBitmap, x, y, paint);
+
+                mSurfaceHolder.unlockCanvasAndPost(canvas);
+                Thread.sleep(REFRESH_INTERVAL_TIME);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-        // 清除屏幕内容
-        // 直接按"Home"回桌面，SurfaceView被销毁了，lockCanvas返回为null。
-        if (surfaceDestoryed == false) {
-            canvas = holder.lockCanvas();
+
+        // clear屏幕内容
+        if (isSurfaceDestoryed == false) {// 如果直接按Home键回到桌面，这时候SurfaceView已经被销毁了，lockCanvas会返回为null。
+            canvas = mSurfaceHolder.lockCanvas();
             canvas.drawColor(Color.TRANSPARENT, android.graphics.PorterDuff.Mode.CLEAR);
-            holder.unlockCanvasAndPost(canvas);
+            mSurfaceHolder.unlockCanvasAndPost(canvas);
         }
 
-        if (listener != null) {
-            listener.onAnimationEnd(this);
+        if (mStausChangedListener != null) {
+            mStausChangedListener.onAnimationEnd(this);
         }
     }
 
@@ -121,11 +118,11 @@ public class AnimationSurfaceView extends SurfaceView implements SurfaceHolder.C
      * 开始播放动画
      */
     public void startAnimation() {
-        if (thread.getState() == Thread.State.NEW) {
-            thread.start();
-        } else if (thread.getState() == Thread.State.TERMINATED) {
-            thread = new Thread(this);
-            thread.start();
+        if (mThread.getState() == Thread.State.NEW) {
+            mThread.start();
+        } else if (mThread.getState() == Thread.State.TERMINATED) {
+            mThread = new Thread(this);
+            mThread.start();
         }
     }
 
@@ -133,14 +130,14 @@ public class AnimationSurfaceView extends SurfaceView implements SurfaceHolder.C
      * 是否正在播放动画
      */
     public boolean isShow() {
-        return iAnimationStrategy.doing();
+        return mIAnimationStrategy.doing();
     }
 
     /**
      * 结束动画
      */
     public void endAnimation() {
-        iAnimationStrategy.cancel();
+        mIAnimationStrategy.cancel();
     }
 
     /**
@@ -149,18 +146,19 @@ public class AnimationSurfaceView extends SurfaceView implements SurfaceHolder.C
      * @param bitmap
      */
     public void setIcon(Bitmap bitmap) {
-        this.bitmap = bitmap;
+        this.mBitmap = bitmap;
     }
+
     /**
      * 获取要播放动画的bitmap
-     *
      */
     public Bitmap getIcon() {
-        return bitmap;
+        return mBitmap;
     }
 
     /**
      * 设置margin left 像素
+     *
      * @param marginLeftPx
      */
     public void setMarginLeft(int marginLeftPx) {
@@ -169,6 +167,7 @@ public class AnimationSurfaceView extends SurfaceView implements SurfaceHolder.C
 
     /**
      * 设置margin left 像素
+     *
      * @param marginTopPx
      */
     public void setMarginTop(int marginTopPx) {
@@ -178,19 +177,19 @@ public class AnimationSurfaceView extends SurfaceView implements SurfaceHolder.C
     /**
      * 设置动画状态改变监听器
      */
-    public void setOnAnimationStausChangedListener(OnAnimationStausChangedListener listener) {
-        this.listener = listener;
+    public void setOnAnimationStausChangedListener(OnStausChangedListener listener) {
+        this.mStausChangedListener = listener;
     }
 
     @Override
     public void run() {
-        handleThread();
+        executeAnimationStrategy();
     }
 
-    public interface OnAnimationStausChangedListener {
-        public void onAnimationStart(AnimationSurfaceView view);
+    public interface OnStausChangedListener {
+        void onAnimationStart(AnimationSurfaceView view);
 
-        public void onAnimationEnd(AnimationSurfaceView view);
+        void onAnimationEnd(AnimationSurfaceView view);
     }
 
     /**
@@ -199,7 +198,7 @@ public class AnimationSurfaceView extends SurfaceView implements SurfaceHolder.C
      * @param strategy
      */
     public void setStrategy(IAnimationStrategy strategy) {
-        this.iAnimationStrategy = strategy;
+        this.mIAnimationStrategy = strategy;
     }
 
 }
