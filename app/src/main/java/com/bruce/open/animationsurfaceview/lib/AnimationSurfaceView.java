@@ -14,7 +14,7 @@ import android.view.SurfaceView;
 public class AnimationSurfaceView extends SurfaceView implements SurfaceHolder.Callback, Runnable {
 
     private static final String TAG = "AnimationSurfaceView";
-    private static final long REFRESH_INTERVAL_TIME = 30l;//每间隔30ms刷一帧
+    private static final long REFRESH_INTERVAL_TIME = 15l;//每间隔15ms刷一帧
     private SurfaceHolder mSurfaceHolder;
     private Bitmap mBitmap;                               //动画图标
     private IAnimationStrategy mIAnimationStrategy;       //动画执行算法策略
@@ -63,7 +63,8 @@ public class AnimationSurfaceView extends SurfaceView implements SurfaceHolder.C
     @Override
     public void surfaceDestroyed(SurfaceHolder holder) {
         isSurfaceDestoryed = true;
-        mIAnimationStrategy.cancel();
+        if (mIAnimationStrategy != null)//如果surfaceView创建后，没有执行setStrategy,就被销毁，会空指针异常
+            mIAnimationStrategy.cancel();
     }
 
     //执行
