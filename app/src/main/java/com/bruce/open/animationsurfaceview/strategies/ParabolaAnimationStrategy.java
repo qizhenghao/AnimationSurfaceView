@@ -64,7 +64,7 @@ public class ParabolaAnimationStrategy implements IAnimationStrategy {
     }
 
     /**
-     * 设置起始下落的高度及水平初速度；并以此计算小球下落的第一阶段及第二阶段上升耗时。
+     * 设置起始下落的高度及水平位移宽度；以此计算水平初速度、计算小球下落的第一阶段及第二阶段上升耗时。
      */
     private void setParams(int h, int w) {
         height = h;
